@@ -18,3 +18,17 @@ Worked through lecture 00
 Continued working through skimage-tutorials
 Worked through lecture 0 on color and exposure
 Still struggling with some aspects
+
+4/7 Tuesday
+Continued working through skimage tutorials
+Started on lecture 1, though didn't feel ready to move on
+Fought with greenscreen function
+
+4/8 Wednesday
+Met with Dan
+Researched image masking function, landed on numpy.ma.where but couldn't get it to work
+
+4/10 Friday
+Got numpy.ma.where working
+Wrote a simple greenscreen function to replicate the same behavior
+
