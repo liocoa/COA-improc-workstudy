@@ -180,9 +180,22 @@ for row in range(target.shape[0]):
             target[row,col,:] = masksquare[row,col,:]
 plt.imshow(target)
         
+#%%
+#Step 3: make it a function!
+#image and background mush have the same dimensions
+def greenscreen(image, background, threshold):
+    target = np.zeros_like(image)
+    for row in range(target.shape[0]):
+        for col in range(target.shape[1]):
+            if image[row,col,[1]] < threshold:    
+                target[row,col,:] = background[row,col,:]
+            else:
+                target[row,col,:] = image[row,col,:]
+    return target
 
-
-
+homemade = greenscreen(lab_greenscreen,lab_newforest,-30)
+plt.imshow(color.lab2rgb(homemade))
+#output is identical to np.ma.where
 
 
 
