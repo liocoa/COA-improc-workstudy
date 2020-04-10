@@ -133,21 +133,53 @@ titles = ['luminance', 'a-component', 'b-component']
 skdemo.imshow_all(luminance, a, b, titles=titles)
 
 
+
+
 #%%
 #I know I want to threshold with a < -50
 #But how?
 #I can show the image of the people with just the bits I want,
 #but I'm not sure how to apply that to the forest image.
-# newimage = np.zeros_like(greenscreen)
-# for col in newimage:
-#     for pixel in col:
-#         pixel = [255,0,0]
-#         plt.imshow(newimage)
+
 
 #Come back to this problem in meeting tomorrow
 
-plt.imshow(a > -50)
+#plt.imshow(a > -50)
 
+newforest = forest[:375,:500,:]
+lab_newforest = color.rgb2lab(newforest)
+
+composite = np.ma.where(lab_greenscreen[:,:,[1]] > -30, lab_greenscreen, lab_newforest)
+plt.imshow(color.lab2rgb(composite))
+
+
+#%%
+
+#Ok! We've gotten a function to do the thing! Now I need to write a loop
+#to do the same thing.
+#Could use nditer to iterate over the image
+#But I'm gonna try a regular loop first.
+
+#Step 1: Make a couple of images
+redsquare = np.zeros((7,7,3),dtype=int)
+redsquare[...,:] = [255,0,0]
+plt.imshow(redsquare)
+
+masksquare = np.zeros_like(redsquare,dtype=int)
+masksquare[...,:] = [0,255,0]
+masksquare[2:5,2:5,:] = [0,0,255]
+plt.imshow(masksquare)
+
+#Step 2: figure out how to iterate through both images at once
+target = np.zeros_like(redsquare,dtype=int)
+for row in range(target.shape[0]):
+    for col in range(target.shape[1]):
+        if masksquare[row,col,[1]] > 0:    
+            target[row,col,:] = redsquare[row,col,:]
+        else:
+            target[row,col,:] = masksquare[row,col,:]
+plt.imshow(target)
+        
 
 
 
