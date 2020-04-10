@@ -31,4 +31,6 @@ Researched image masking function, landed on numpy.ma.where but couldn't get it 
 4/10 Friday
 Got numpy.ma.where working
 Wrote a simple greenscreen function to replicate the same behavior
+Worked again in lecture 1 (filtering)
+Began to wrap my head around what's going on with convolve
 
