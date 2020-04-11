@@ -1,32 +1,5 @@
-3/30 Monday
-Created a GitHub account
-
-3/31 Tuesday
-Worked through GitHub "Hello World" tutorial
-Downloaded Git Bash
-Found scikit-image tutorial on GitHub
-
-4/1 Wednesday
-Met with Dan
-Downloaded Anaconda distribution of Python
-
-4/3 Friday
-Began working through skimage-tutorials
-Worked through lecture 00
-
-4/4 Saturday
-Continued working through skimage-tutorials
-Worked through lecture 0 on color and exposure
-Still struggling with some aspects
-
-4/7 Tuesday
-Continued working through skimage tutorials
-Started on lecture 1, though didn't feel ready to move on
-Fought with greenscreen function
-
-4/8 Wednesday
-Met with Dan
-Researched image masking function, landed on numpy.ma.where but couldn't get it to work
+4/11 Saturday
+Finished up lecture 1 (filtering) and started lecture 2 (feature detection)
 
 4/10 Friday
 Got numpy.ma.where working
@@ -34,6 +7,33 @@ Wrote a simple greenscreen function to replicate the same behavior
 Worked again in lecture 1 (filtering)
 Began to wrap my head around what's going on with convolve
 
-4/11 Saturday
-Finished up lecture 1 (filtering) and started lecture 2 (feature detection)
+4/8 Wednesday
+Met with Dan
+Researched image masking function, landed on numpy.ma.where but couldn't get it to work
+
+4/7 Tuesday
+Continued working through skimage tutorials
+Started on lecture 1, though didn't feel ready to move on
+Fought with greenscreen function
+
+4/4 Saturday
+Continued working through skimage-tutorials
+Worked through lecture 0 on color and exposure
+Still struggling with some aspects
+
+4/3 Friday
+Began working through skimage-tutorials
+Worked through lecture 00
+
+4/1 Wednesday
+Met with Dan
+Downloaded Anaconda distribution of Python
+
+3/31 Tuesday
+Worked through GitHub "Hello World" tutorial
+Downloaded Git Bash
+Found scikit-image tutorial on GitHub
+
+3/30 Monday
+Created a GitHub account
 
