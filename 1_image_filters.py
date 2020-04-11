@@ -196,7 +196,7 @@ bright_square = np.zeros((7, 7), dtype=float)
 bright_square[2:5, 2:5] = 1
 fig, ax = plt.subplots()
 ax.imshow(bright_square);
-
+#%%
 mean_kernel = np.full((3, 3), 1/9)
 print(mean_kernel)
 
@@ -244,6 +244,76 @@ imshow_all(pixelated, filtered, titles=['pixelated', 'mean filtered'])
 
 #%%
 
+#Exercise: (Chapter 0 reminder!) Plot the profile of the gaussian kernel at 
+#its midpoint, i.e. the values under the line shown here:
+from skimage import filters
+sidelen = 45
+sigma = (sidelen - 1) // 2 // 4
+spot = np.zeros((sidelen, sidelen), dtype=float)
+spot[sidelen // 2, sidelen // 2] = 1
+kernel = filters.gaussian(spot, sigma=sigma)
+
+imshow_all(spot, kernel / np.max(kernel))
+
+fig, ax = plt.subplots()
+
+ax.imshow(kernel, cmap='inferno')
+ax.vlines(22, -100, 100, color='C9')
+ax.set_ylim((sidelen - 1, 0))
+#%%
+
+relevant = kernel[:,[22]]
+print(relevant)
+relevant = np.reshape(relevant,(1,len(relevant)))
+print(relevant)
+
+fig, ax1 = plt.subplots()
+ax1.plot(relevant[0])
+#Got it.
+#%%
+#Edge detection
+vertical_kernel = np.array([
+    [-1],
+    [ 0],
+    [ 1],
+])
+
+gradient_vertical = ndi.correlate(pixelated.astype(float),
+                                  vertical_kernel)
+fig, ax = plt.subplots()
+ax.imshow(gradient_vertical);
+#%%
+#Exercise:
+#Add a horizontal kernel to the above example to also compute the 
+    #horizontal gradient,  𝑔𝑦
+#Compute the magnitude of the image gradient at each point:  
+    #|𝑔|=√(𝑔^2𝑥+𝑔^2𝑦)
+#The idea here is that we're using a 1D difference filter to approximate
+    #the gradient
+#What is the gradient?
+
+image = pixelated.astype(float)
+
+vertical_kernel = np.array([
+    [-1],
+    [ 0],
+    [ 1],
+])
+horizontal_kernel = np.array([[-1, 0, 1]])
+
+gradient_vertical = ndi.correlate(image, vertical_kernel)
+gradient_horizontal = ndi.correlate(image, horizontal_kernel)
+
+gradient_magnitude = np.zeros_like(image)
+for row in range(np.shape(image)[0]):
+    for col in range(np.shape(image)[1]):
+        gradient_magnitude[row,col] = np.sqrt(gradient_vertical[row,col]**2 +
+                                              gradient_horizontal[row,col]**2)
+
+imshow_all(gradient_vertical,gradient_horizontal, gradient_magnitude,
+           titles=('vertical','horizontal','magnitude'));
+
+#I did it!
 
 
 
