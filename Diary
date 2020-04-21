@@ -1,3 +1,11 @@
+4/21 Tuesday
+I was able to find and draw the major axis of a copepod with a simple bespoke algorithm
+Began working on figuring out the size of the grid (not much progress)
+
+4/18 Saturday
+Determined that detecting copepods with the hough ellipse function is not feasible
+My computer chewed on it for five hours and never returned
+
 4/17 Friday
 Grabbed a copepod image to try out my new skillz
 Drumroll please...
