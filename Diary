@@ -1,3 +1,14 @@
+4/22 Wednesday
+Met with Dan and showed him the copepod axis
+Continued to struggle with finding intersection points of the grid
+  (I thought I had it figured out but they're just not plotting correctly and I haven't figured out why)
+Developed a concrete goals to achieve before roping in Andrea:
+  Get pixels per mm
+  get major axis and length
+  print image name, ppm, and length to a text file
+  Do this for ~10 images
+  Print all to the same text file
+
 4/21 Tuesday
 I was able to find and draw the major axis of a copepod with a simple bespoke algorithm
 Began working on figuring out the size of the grid (not much progress)
