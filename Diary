@@ -1,3 +1,11 @@
+5/01 Saturday
+Well I haven't updated this in over a week
+I apologize
+I have generally been fighting with getting the algorithm to generalize to more images
+Today I worked on the "just find the grid in a bunch of them" pipeline
+About 80% success
+See bulk_grid_detector.py
+
 4/24 Friday
 Managed to get intersection finding working (with a little help)
 Finally calculated the length of the copepod in the test image
