@@ -5,30 +5,78 @@ A module containing functions for detecting and measuring Andrea's copepod image
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage import feature, io, color
-from skimage import transform
-from skimage import exposure
+from skimage import io, color, transform
 from skimage.transform import hough_line_peaks
 import glob
 import math
 import copy
 import random
+from more_itertools import distinct_combinations
 
 
-__all__ = ['show_all','get_images','plot_with_gridlines','detect_gridlines',
-           'get_intersections','find_grid_size','get_major_axis',
-           'get_copepod_length','length_from_axis']
+####################
+# ACTIVE FUNCTIONS #
+####################
 
 
-def near_in(value, alist, threshold):
+
+def almostEqual(a,b,EPSILON=1e-2):
+    """ Return whether a and b are roughly equal, +- EPSILON. """
+    return abs(a - b) < EPSILON
+
+def near_in(value, alist):
     """ 
     Iterate through elements in alist and check if |element - value| < threshold for any element in alist.
-    
     """
     for item in alist:
-        if abs(item - value) < threshold:
+        if almostEqual(value, item):
             return True
     return False
+
+def hough_grid_peaks(h,theta,ro,min_distance=5):
+    """
+    An attempt to make a version of hough_line_peaks that detects only lines
+    in a grid. Actually detects all lines that are either parallel or
+    perpendicular to any other line.
+
+    Parameters
+    ----------
+    h : array
+        output from hough_line
+    theta : array
+        output from hough_line
+    ro : array
+        output from hough_line
+    min_distance : TYPE, optional
+        The minimum number of pixels between lines. The default is 5.
+
+    Returns
+    -------
+    _h : TYPE
+        the same h and above
+    angles
+        angles for the detected lines
+    distnaces
+        ro values for the detected lines
+
+    """
+    #Get the regular peaks
+    _h, angle, dist = hough_line_peaks(h,theta,ro,min_distance=min_distance)
+    #Get these points associated
+    points = [(angle[n], dist[n]) for n in range(len(angle))]
+    points.sort()
+    #Pick points to try to fit
+    candidates = []
+    for point in points:
+      others = copy.copy(points)
+      others.remove(point)
+      for other in others:
+        diff = abs(point[0]) - abs(other[0])
+        if almostEqual(diff,0) or almostEqual(diff,np.pi / 2):
+          candidates.append(point)
+          break
+    return (_h,[p[0] for p in candidates],[p[1] for p in candidates])
+
 
 
 
@@ -53,13 +101,13 @@ def show_all(images, title = None, cmap = 'gray'):
         rows = int(math.ceil(np.sqrt(quantity)))
         cols = int(math.ceil(quantity/rows))
         
-        fig, axes = plt.subplots(rows,cols)
+        fig, axes = plt.subplots(rows,cols, figsize = (rows*7, cols*7))
         try:
           ax = axes.ravel()
         except:
           ax = [axes]
         
-        fig.suptitle(title)
+        fig.suptitle(title,fontsize=rows*20)
         
         for n in range(quantity):
             ax[n].imshow(images[n], cmap = cmap)
@@ -78,7 +126,7 @@ def get_images(directory):
     Parameters
     ----------
     directory : str
-        The directory name containing the images.
+        The directory name containing the images. Should end with a slash.
 
     Returns
     -------
@@ -105,7 +153,6 @@ def plot_with_gridlines(image,name,lines):
     Plot a copepod image overlaid with its gridlines and intersections.
     Save image as name; don't show it.
 
-
     Parameters
     ----------
     image : array
@@ -131,6 +178,61 @@ def plot_with_gridlines(image,name,lines):
     plt.close()
 
 
+def is_square(combination):
+    """ Return whether or not a set of four lines makes a square, and the side length.
+    Each line should be in polar coordinates in the format (angle, dist).
+    
+    Return tuple (square, size,)
+    square = bool whether or not the lines form a square.
+    size = the side length of the square. 0 if not a square.
+    
+    """
+    # Compare the four lines pairwise.
+    line_comps = list(distinct_combinations(combination,2))
+    n_parallel = 0
+    n_perpendicular = 0
+    dists = []
+    for comp in line_comps:
+        # Get the angle between the lines.
+        angle = abs(comp[0][0]) + abs(comp[1][0])
+        # We want to know if they're perpendicular or parallel.
+        if almostEqual(comp[0][0], comp[1][0]):
+            # They're parallel!
+            n_parallel += 1
+            # We want to know the distance between these lines.
+            dists.append(np.sqrt((comp[0][1] - (comp[1][1]))**2))
+        elif almostEqual(angle,np.pi/2):
+            # They're perpendicular!
+            n_perpendicular += 1
+        else:
+            # These are neither parallel nor perpendicular.
+            # This whole combination can be discarded.
+            return False, 0
+
+    if n_parallel == 2 and n_perpendicular == 4 and len(dists) == 2:
+        # This is a rectangle.
+        if almostEqual(dists[0], dists[1], 5):
+            # This is a square. Return True and the size.
+            return True, np.mean((dists[0],dists[1]))
+    return False, 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################
+# ARCHIVAL FUNCTIONS #
+######################
+# Traverse at your own risk.
 
 def success(lines):
     """
@@ -148,27 +250,35 @@ def success(lines):
         return False
     if len(lines) > 10:
         return False
-    
-    
-    
     return True
     
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#%%
+def get_intersections_2(lines, imgshape):
+    x_is = []
+    y_is = []
+    
+    comparisons = list(distinct_combinations(lines,2))
+    for comp in comparisons:
+        # Line format is ((x0,x1),(y0,y1))
+        line_a = comp[0]
+        y_a1 = line_a[1][0]
+        y_a2 = line_a[1][1]
+        x_a1 = line_a[0][0]
+        x_a2 = line_a[0][1]
+        m_a  = (y_a1 - y_a2)/(x_a1 - x_a2)
+        line_b = comp[1]
+        y_b1 = line_b[1][0]
+        y_b2 = line_b[1][1]
+        x_b1 = line_b[0][0]
+        x_b2 = line_b[0][1]
+        m_b  = (y_b1 - y_b2)/(x_b1 - x_b2)
+        if m_b != m_a:
+            x_i = (y_b1 - y_a1 + m_a*x_a1 - m_b*x_b1)/(m_a - m_b)
+            y_i = m_a * (x_i - x_a1) + y_a1
+            if 0 < x_i < imgshape[1] and 0 < y_i < imgshape[0]: #Check it's within the image
+                x_is.append(x_i)
+                y_is.append(y_i)
+    
     
 def detect_gridlines(canny):
     """Return a list of the gridlines in an image.
@@ -211,10 +321,6 @@ def get_intersections(lines, imgshape):
                     x_is.append(x_i)
                     y_is.append(y_i)
     return x_is, y_is
-
-
-
-
 
 
 
@@ -266,8 +372,6 @@ def find_grid_size(lines, imgshape):
     
     return px_per_unit, (home_x,home_y)
 
-
-#%%
     
 def get_major_axis(copepod):
     """
