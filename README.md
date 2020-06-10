@@ -45,7 +45,7 @@ The last paradigm I tried before the term ended focused on measuring the grid wi
 
 I imagine square finding as part of a "low-hanging fruit" sort of algorithm. Though there are a lot of pesky images, many of them solve easily. Rather than writing logic to handle any possible outcome, all the images could be run through the simple square finder and sorted by whether or not they're likely to have worked, and all the ones that couldn't be measured with confidence go on to some other algorithm down the line. Something like this:
 
-![Like this!](algorithmflowchart.jpg)
+![Like this!](algorithmflowchart.JPG)
 
 Unfortunately I didn't get to writing any of those other algorithms, but overall this direction feels promising. [square_finder](square_finder.py) is the code I wrote trying out this paradigm.
 
