@@ -6,7 +6,7 @@ The work I did was built on image processing skills gained from a scikit-image t
 
 ## Initial attempt
 
-My first pass at the problem of copepod detection focused on trying to solve the problem for a single image. [I wrote a script to find and measure the grid, then find and measure the copepod in the image.](copepod_test_WORKS.py)
+My first pass at the problem of copepod detection focused on trying to solve the problem for a single image. [copepod_test_WORKS](copepod_test_WORKS.py) finds and measures the grid, then finds and measures the copepod in the image.
 
 The main limitation of this code is that it *really* only works on the exact image it's built for. The thresholds that rescale the image for finding the copepod are set by hand, and I have no good way to generalize them. In addition, the gridline finder is also not super generalizable. I did a bit of exploring in isolating the copepods in new ways, but most of the rest of my work was taken up by trying to find good ways to accurately measure the grid.
 
@@ -27,9 +27,9 @@ I wrote a couple of scripts focusing on a grid detection pipeline to allow mysel
 I tried using thresholding filters for both the gridlines and copepod detection. I found the [triangle threshold](https://scikit-image.org/docs/stable/api/skimage.filters.html#skimage.filters.threshold_triangle) tended to be the best global thresholding option. Overall, doing the threshold before canny and hough didn't seem to help much with the grid.
 
 #### Grid peaks
-I did quite a bit of work exploring the output of hough_line to see if I could use some kind of logic to accept lines that formed a grid and reject all others. I made reasonable progress with that. It worked extremely well in [tests with constructed grid images](grid_hough.py), but fell a bit flat when applied to real images. It worked reasonably well on images with a clear grid, but failed to exclude images that were somehow out of the ordinary. 
+I did quite a bit of work exploring the output of hough_line to see if I could use some kind of logic to accept lines that formed a grid and reject all others. I made reasonable progress with that. It worked extremely well in tests with constructed grid images, which you can see in [grid_hough](grid_hough.py), but fell a bit flat when applied to real images. It worked reasonably well on images with a clear grid, but failed to exclude images that were somehow out of the ordinary. 
 
-The reason for that (I think) is that the grid-finding logic I wrote [and included in copeproc](copeproc.py) didn't actually detect a grid, but rather detected any and all lines that were either parallel-ish or perpendicular-ish to any other line. I began fussing with making a new version to actually detect a grid, but moved on to square finding before getting very far in that department.
+The reason for that (I think) is that the grid-finding logic I wrote and included in copeproc didn't actually detect a grid, but rather detected any and all lines that were either parallel-ish or perpendicular-ish to any other line. I began fussing with making a new version to actually detect a grid, but moved on to square finding before getting very far in that department.
 
 It's worth doing a serious explanation of Hough space here. I'll start by linking some resources.
 * A very thorough [set of lecture slides](http://dept.me.umn.edu/courses/me5286/vision/Notes/2015/ME5286-Lecture9.pdf) on how the Hough transform works
@@ -47,7 +47,7 @@ I imagine square finding as part of a "low-hanging fruit" sort of algorithm. Tho
 
 ![Like this!](algorithmflowchart.jpg)
 
-Unfortunately I didn't get to writing any of those other algorithms, but overall this direction feels promising. [Here's the code I wrote](square_finder.py) for finding squares.
+Unfortunately I didn't get to writing any of those other algorithms, but overall this direction feels promising. [square_finder](square_finder.py) is the code I wrote trying out this paradigm.
 
 ### Unexplored paradigms
 #### Corner detection
