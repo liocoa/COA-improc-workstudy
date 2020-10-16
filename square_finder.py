@@ -11,6 +11,8 @@ I'll also be downsampling the images first, like I totally should have from
 the beginning.
 """
 
+#%% Imports and outline
+
 #Imports
 import copeproc as cp
 import numpy as np
@@ -20,23 +22,67 @@ from matplotlib import cm
 from skimage.feature import canny
 import more_itertools
 import time
+from skimage import io, color
+import glob
+from scipy import stats
 
 
-#Get the images I want to use
-file_path = "C:/Users/Emily/Desktop/Image Processing/select_copepods/"
-images, imgnames = cp.get_images(file_path)
+"""
+Here's the basic outline.
 
-#Downsample to 1/2 size and canny
-for n in range(len(images)):
-    images[n] = canny(images[n][::2,::2])
-    
+# Get the image paths
+# For each path:
+    # Get the image and its tag
+    # Downsample
+    # Canny
+    # Hough lines
+    # Count the lines
+    # If the count is good:
+        # Check for squares
+        # If there are squares:
+            # Remove outliers
+            # Get square size
+    # Generate a tracking figure
+
+
+"""
+
+
+
+
+
+
+#%% Get the image paths
+file_path = "C:/Users/Emily/Desktop/Image Processing/img_cache/"
+
+img_paths = glob.glob(file_path+'*.jpg')
+
 successes = 0
-total = len(images)
+total = len(img_paths)
 starttime = time.time()
 
-#Here's the code from colab - mostly copied from the skimage docs actually.
-for image, tag in zip(images,imgnames):
+
+# A place to store image paths that worked
+successful_images = []
+# The square sizes found in the successful images, associated by order
+successful_squares = []
+
+#%% For each path
+for path in img_paths:
+    #%%% Get the image and its tag
+    image = color.rgb2gray(io.imread(path))
+    tag = path[(len(file_path)):]
+
+    #%%%Downsample and canny
+
+    image = canny(image[::2,::2])
+        
     
+
+    #Here's the code from colab - mostly copied from the skimage docs actually.
+
+    
+    #%%% Hough
     # Classic straight-line Hough transform
     # Set a precision of 0.5 degree.
     tested_angles = np.linspace(-np.pi / 2, np.pi / 2, 360)
@@ -50,6 +96,7 @@ for image, tag in zip(images,imgnames):
     
     # Let's start doing something with these lines.
     
+    #%%% Count the lines
     # Quantity matters. Let's count them and decide what to do with the image
     # based on the number of lines.
     n_lines = len(angle)
@@ -57,10 +104,12 @@ for image, tag in zip(images,imgnames):
     data_string += (f"lines found: {n_lines}\n")
     data_string += (f"count_ok = {count_ok}\n")
     
+    #%%% If the count is good...
     # Now, if we have a decent shot at success, we want to try to find a square.
     if count_ok:
         # Associate angle and distance in a way that will be easier to iterate
         lines = [(a,r) for a,r in zip(angle,ro)]
+        #%%%% Check for squares
         # Check each distinct combination of 4 lines to see if they make a square
         combs = list(more_itertools.distinct_combinations(lines, 4))
         data_string += f"{len(combs)} combinations of lines\n"
@@ -72,107 +121,102 @@ for image, tag in zip(images,imgnames):
             outputs.append((square, size))
             if square:
                 square_combs.append(comb)
+       
+        #%%%% If there are squares...
         # If any of those combinations made a square, we'll get a True in the output.
-        # Let's keep them.
-        square_sizes = [out[1] for out in outputs if out[0]]
-        data_string += f"Square sizes are {square_sizes}\n"
-        
-        # If these sizes don't vary widely, we can use the mean value as our scale!
-        if np.var(square_sizes) < 10:
-            scale = np.mean(square_sizes)
-            data_string += f"scale = {scale:.2f} pixels/mm"
-            successes += 1
-        
+        if any([out[0] for out in outputs]):
             
+            #%%%%% Measure them
+            square_sizes = [out[1] for out in outputs if out[0]]
+            size_strs = [f"{x:.1f}" for x in square_sizes]
+            data_string += f"Square sizes are {size_strs}\n"
+            
+            #%%%%% Remove outliers
+            # Now it would be good to get rid of outliers, in case of detecting big squares.
+            square_sizes = cp.removeOutliers(square_sizes, 1)
+            size_strs = [f"{x:.1f}" for x in square_sizes]
+            data_string += f"removeOutlier results are {size_strs}\n"
+        
+        
+            #%%%%% Get square size
+            # If these sizes don't vary widely, we can use the mean value as our scale!
+            if np.var(square_sizes) < 10:
+                scale = np.mean(square_sizes)
+                data_string += f"scale = {scale:.2f} pixels/mm"
+                successes += 1
+                
+                # If we got this far, we can save the image path and square size
+                successful_images.append(path)
+                successful_squares.append(scale)
+        
+        
+
+
+
+
+    
+    #%%% Plot the result
     
     
+    # # Generate a figure to show what happened
+    # fig, axes = plt.subplots()
+
+    # # Plot the detected lines on the canny image
+    # axes.imshow(image, cmap=cm.gray)
+    # origin = np.array((0, image.shape[1]))
     
+    # for _, angle, dist in zip(*(x,angle,ro)):
+    #     y0, y1 = (dist - origin * np.cos(angle)) / np.sin(angle)
+    #     axes.plot(origin, (y0, y1), '-r')
+    # axes.set_xlim(origin)
+    # axes.set_ylim((image.shape[0], 0))
+    # axes.set_axis_off()
+    # axes.set_title(f'Detected lines: {tag}')
     
-    # Generate a figure to show what happened
-    fig, axes = plt.subplots(1, 3, figsize=(15, 6))
-    ax = axes.ravel()
+    # try:
+    #     square_lines = []
+    #     for comb in square_combs:
+    #         for line in comb:
+    #             square_lines.append(line)
+    #     square_angles = [line[0] for line in square_lines]
+    #     square_dists = [line[1] for line in square_lines]
+    #     for q,p in zip(square_angles, square_dists):
+    #         y0, y1 = (p - origin * np.cos(q)) / np.sin(q)
+    #         axes.plot(origin, (y0, y1), '-b')
+    # except:
+    #     pass
+    # finally:
+    #     square_lines = []
+    #     square_combs = []
     
-    # Plot the canny image  
-    ax[0].imshow(image, cmap=cm.gray)
-    ax[0].set_title(f'Input image: {tag}')
-    ax[0].set_axis_off()
+    # axes.text(25,image.shape[1]+30,data_string)
     
-    # Plot the hough output and detected points
-    ax[1].imshow(np.log(1 + h),
-                extent=[np.rad2deg(theta[-1 ]), np.rad2deg(theta[0]), d[-1], d[0]],
-                cmap=cm.gray)
-    ax[1].scatter(np.rad2deg(angle)*(-1),ro,c='r')
-    ax[1].set_title('Hough transform')
-    ax[1].set_xlabel('Angles (degrees)')
-    ax[1].set_ylabel('Distance (pixels)')
-    ax[1].axis('image')
+    # # Show the image
+    # plt.show()
     
-    # Plot the detected lines on the canny image
-    ax[2].imshow(image, cmap=cm.gray)
-    origin = np.array((0, image.shape[1]))
+
+#%% Clean the data
     
-    for _, angle, dist in zip(*(x,angle,ro)):
-        y0, y1 = (dist - origin * np.cos(angle)) / np.sin(angle)
-        ax[2].plot(origin, (y0, y1), '-r')
-    ax[2].set_xlim(origin)
-    ax[2].set_ylim((image.shape[0], 0))
-    ax[2].set_axis_off()
-    ax[2].set_title('Detected lines')
-    
-    try:
-        square_lines = []
-        for comb in square_combs:
-            for line in comb:
-                square_lines.append(line)
-        square_angles = [line[0] for line in square_lines]
-        square_dists = [line[1] for line in square_lines]
-        for q,p in zip(square_angles, square_dists):
-            y0, y1 = (p - origin * np.cos(q)) / np.sin(q)
-            ax[2].plot(origin, (y0, y1), '-b')
-    except:
-        pass
-    finally:
-        square_lines = []
-        square_combs = []
-    
-    ax[2].text(25,image.shape[1]+30,data_string)
-    
-    # Save it and show it
-    plt.savefig(f"{tag}.jpg")
-    plt.show()
-    
-    print("DONE WITH THIS ONE")
+# I think at this point it's reasonable to remove outliers again...
+# Have to make sure the associated paths go too.
+    # But for now, let's just remove outliers to see the stats.
+
+successful_squares = cp.removeOutliers(successful_squares, 2)
+
+
+y = successful_squares
+# x = list(range(len(y)))
+plt.hist(y,bins=10)
+plt.show()
+
+successes = len(successful_squares)
 
 elapsed = time.time() - starttime
 success_rate = successes/total*100
 print(f"Out of {total} images tested, {successes} found usable squares.\nThat's a {success_rate:.2f}% success rate.\nThe program took {elapsed:.2f} seconds to run, which is an average of {elapsed/total:.3f} seconds per image.")
-  
-#%%
-""" 
-Let's start to imagine some kind of algorithm.
-  
-    1. Check if it's good.
-        - It's good if you can find a perfect square AND there's not an absurd
-            number of lines.
-            CHECKING FOR GOOD
-            - Count the lines
-                - There should be at least 4, and no more than like 6 or 8.
-            
-            
-        - Good ones don't need any more pre-processing.
-        - Not good ones get set aside to be dealt with later.
-    2. Handle the ones that need help.
-        WAYS TO NOT HAVE A SQUARE
-        - Too many lines
-            - Might be blurry or need rescaling
-        - Too few lines
-            - Still might be blurry or need rescaling
-        - Crucial line obstructed somehow
-            - This will take some other kind of logic...
-            - Maybe check for right angles.
-    
+print(stats.describe(successful_squares))
 
-"""
-#%%
 
-# Let's start on some methods to identify success.
+# The million dollar question now...
+# Are these square sizes uniform enough to apply the mean square size to grids
+# I can't measure and call it good??

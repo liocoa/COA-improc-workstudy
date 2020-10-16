@@ -33,49 +33,7 @@ def near_in(value, alist):
             return True
     return False
 
-def hough_grid_peaks(h,theta,ro,min_distance=5):
-    """
-    An attempt to make a version of hough_line_peaks that detects only lines
-    in a grid. Actually detects all lines that are either parallel or
-    perpendicular to any other line.
 
-    Parameters
-    ----------
-    h : array
-        output from hough_line
-    theta : array
-        output from hough_line
-    ro : array
-        output from hough_line
-    min_distance : TYPE, optional
-        The minimum number of pixels between lines. The default is 5.
-
-    Returns
-    -------
-    _h : TYPE
-        the same h and above
-    angles
-        angles for the detected lines
-    distnaces
-        ro values for the detected lines
-
-    """
-    #Get the regular peaks
-    _h, angle, dist = hough_line_peaks(h,theta,ro,min_distance=min_distance)
-    #Get these points associated
-    points = [(angle[n], dist[n]) for n in range(len(angle))]
-    points.sort()
-    #Pick points to try to fit
-    candidates = []
-    for point in points:
-      others = copy.copy(points)
-      others.remove(point)
-      for other in others:
-        diff = abs(point[0]) - abs(other[0])
-        if almostEqual(diff,0) or almostEqual(diff,np.pi / 2):
-          candidates.append(point)
-          break
-    return (_h,[p[0] for p in candidates],[p[1] for p in candidates])
 
 
 
@@ -178,9 +136,13 @@ def plot_with_gridlines(image,name,lines):
     plt.close()
 
 
-def is_square(combination):
+def is_square(combination, epsilon=1):
     """ Return whether or not a set of four lines makes a square, and the side length.
     Each line should be in polar coordinates in the format (angle, dist).
+    
+    Epsilon here is the amount of difference allowed in the angle of the lines
+    to decide it they're parallel, measured in degrees.
+    
     
     Return tuple (square, size,)
     square = bool whether or not the lines form a square.
@@ -194,14 +156,22 @@ def is_square(combination):
     dists = []
     for comp in line_comps:
         # Get the angle between the lines.
-        angle = abs(comp[0][0]) + abs(comp[1][0])
+        
+        # First check the signs on the angles to the origin.       
+        # If the sign is the same, take the abs of the difference.
+        if np.sign(comp[0][0]) == np.sign(comp[1][0]):
+            angle = abs(comp[0][0] - comp[1][0])
+        # If the sign is different, sum the abs vals.
+        else:
+            angle = abs(comp[0][0]) + abs(comp[1][0])
+
         # We want to know if they're perpendicular or parallel.
-        if almostEqual(comp[0][0], comp[1][0]):
+        if almostEqual(comp[0][0], comp[1][0], epsilon):
             # They're parallel!
             n_parallel += 1
             # We want to know the distance between these lines.
             dists.append(np.sqrt((comp[0][1] - (comp[1][1]))**2))
-        elif almostEqual(angle,np.pi/2):
+        elif almostEqual(angle,np.pi/2, epsilon):
             # They're perpendicular!
             n_perpendicular += 1
         else:
@@ -211,12 +181,28 @@ def is_square(combination):
 
     if n_parallel == 2 and n_perpendicular == 4 and len(dists) == 2:
         # This is a rectangle.
-        if almostEqual(dists[0], dists[1], 5):
+        # Check if it's a square. Allow +/- 5%
+        if abs(dists[0] - dists[1]) <= min(dists)*0.05:
             # This is a square. Return True and the size.
             return True, np.mean((dists[0],dists[1]))
     return False, 0
 
 
+def removeOutliers(x, outlierConstant):
+    """
+    From https://www.dasca.org/world-of-big-data/article/identifying-and-removing-outliers-using-python-packages
+    """
+
+    a = np.array(x)
+    upper_quartile = np.percentile(a, 75)
+    lower_quartile = np.percentile(a, 25)
+    IQR = (upper_quartile - lower_quartile) * outlierConstant
+    quartileSet = (lower_quartile - IQR, upper_quartile + IQR)
+    resultList = []
+    for y in a.tolist():
+        if y >= quartileSet[0] and y <= quartileSet[1]:
+            resultList.append(y)
+    return resultList
 
 
 
@@ -233,6 +219,56 @@ def is_square(combination):
 # ARCHIVAL FUNCTIONS #
 ######################
 # Traverse at your own risk.
+    
+
+def hough_grid_peaks(h,theta,ro,min_distance=5):
+    """
+    An attempt to make a version of hough_line_peaks that detects only lines
+    in a grid. Actually detects all lines that are either parallel or
+    perpendicular to any other line.
+
+    Parameters
+    ----------
+    h : array
+        output from hough_line
+    theta : array
+        output from hough_line
+    ro : array
+        output from hough_line
+    min_distance : TYPE, optional
+        The minimum number of pixels between lines. The default is 5.
+
+    Returns
+    -------
+    _h : TYPE
+        the same h and above
+    angles
+        angles for the detected lines
+    distnaces
+        ro values for the detected lines
+
+    """
+    #Get the regular peaks
+    _h, angle, dist = hough_line_peaks(h,theta,ro,min_distance=min_distance)
+    #Get these points associated
+    points = [(angle[n], dist[n]) for n in range(len(angle))]
+    points.sort()
+    #Pick points to try to fit
+    candidates = []
+    for point in points:
+      others = copy.copy(points)
+      others.remove(point)
+      for other in others:
+        diff = abs(point[0]) - abs(other[0])
+        if almostEqual(diff,0) or almostEqual(diff,np.pi / 2):
+          candidates.append(point)
+          break
+    return (_h,[p[0] for p in candidates],[p[1] for p in candidates])
+
+
+
+
+
 
 def success(lines):
     """
