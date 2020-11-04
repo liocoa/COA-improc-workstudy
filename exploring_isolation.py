@@ -12,12 +12,18 @@ from skimage import morphology, filters
 import copeproc as cp
 import random as rand
 import scipy.ndimage as ndi
+import matplotlib.pyplot as plt
 
 # Get all the images
 
 wd = 'C:/Users/Emily/Desktop/Image Processing/select_copepods/'
 
 images, imgnames = cp.get_images(wd)
+
+
+# Downsample to 1/2 size
+for image in images:
+    image = image[::2][::2]
 
 QUANTITY = len(images)
 
@@ -30,8 +36,8 @@ testimg, testimgname = images[imgpick], imgnames[imgpick]
 # Toggle which line is commented to run either on the selected image or the 
 # whole batch
 
-#test = [testimg]
-test = images
+test = [testimg]
+#test = images
 
 
 # A helper to erode all images in a list
@@ -65,6 +71,7 @@ def remove_edge_regions(labeled_image):
     labels = np.unique(labels)
     
     # Iterate through all pixels in the image
+    # THIS IS WHY IT'S SLOW
     for r in range(labeled_image.shape[0]):
         for c in range(labeled_image.shape[1]):
             # If this pixel contains a label that we found on an edge...
@@ -118,6 +125,33 @@ cp.show_all(edited,cmap = 'inferno')
 # everything else and dilate 10 times to get the copepod back to its original
 # dimensions. Once it's the only thing in the image, it should be pretty easy 
 # to measure.
+
+#%% And we're back
+
+
+for img in test:
+    # See what find_objects does
+    objects = ndi.find_objects(img)
+    print("objects is")
+    print(objects)
+    for obj in objects:
+        if obj != None:
+            print("obj is")
+            print(obj)
+            fig,ax=plt.subplots()
+            ax.imshow(img[obj])
+    
+    # Select largest remaining region
+    
+    
+    # Get rid of all other regions
+    
+    
+    
+    # Dilate 10 times
+    
+    
+    # Measure the major axis of the copepod
 
 
 
