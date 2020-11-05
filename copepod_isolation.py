@@ -116,6 +116,8 @@ for obj in objects:
         print("obj is")
         print(obj)
         show(image[obj])
+# Get clear on what the edges are
+print(np.shape(image))
 
 
 ########################################################
