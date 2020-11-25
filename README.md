@@ -16,9 +16,6 @@ A program which runs grid detection and naive copepod detection on a folder of i
 `smart_pipe.py`
 A program which runs grid detecction and smart copepod detection on a folder of images using an object detection model trained in Detecto. This program currently uses uncompressed, color images. The plan is to retrain the object detection on compressed greyscale images, but the training code keeps breaking in very weird ways so that hasn't happened yet.
 
-`<model_name>.pth`
-The model used by `smart_pipe.py` to detect copepods.
-
 ## Use Guide
 
 ### Installation and preparation
@@ -40,7 +37,7 @@ Once the code is done, have a look at your output images and output table. If a 
 
 Open `smart_pipe.py`. For now, use raw images for this pipeline, not compressed ones.
 
-For setup, set `input_dir`, `img_out_dir`, and `table_out_dir` variables. Set `model_path` to the path to the .pth file (just `<model_name>.pth` if it's in the same folder as `smart_pipe.py`). Set `table_name.py`. 
+For setup, set `input_dir`, `img_out_dir`, and `table_out_dir` variables. Set `model_path` to the path to the .pth file to use for the model. This file can be found on Lio's Drive. I'll share it with you, Dan. It's too big to upload here. Set `table_name.py`. 
 
 There are some extra options at the top of this file, mostly for debugging purposes. You can set `show = True` to get some images to show how the algorithm is going. You can set `verbose = True` to get some printouts, but please don't expect much from them. You can set `sample_size` to `None` to run all the images in your input directory, or an integer smaller than your total number of images to run the code on a random sample of that many images. I don't recommend running it on more than a few images, because I expect it to break.
 
