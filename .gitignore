@@ -1,2 +1,9 @@
 .spyproject
 __pycache__
+detecto
+images
+.jpg
+.ipynb_checkpoints
+.txt
+table_out
+.pth
